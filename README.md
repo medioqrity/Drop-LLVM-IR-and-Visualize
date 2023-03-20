@@ -2,6 +2,8 @@
 
 Forked from [GraphvizOnline](https://github.com/dreampuf/GraphvizOnline). Modified to fit the need for drag and drop llvm IR files and see CFGs immediately.
 
+![usage](usage.gif)
+
 ## Environment requirements
 
 You will need:
@@ -51,5 +53,5 @@ Server running at http://127.0.0.1:3000/
 
 ## To-do list
 
-- [ ] Add options to generate callgraph / dom-tree / post dom-tree
+- [x] Add options to generate callgraph / dom-tree / post dom-tree
 - [ ] Add command line options to change port
