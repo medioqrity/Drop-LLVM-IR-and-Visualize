@@ -1,1 +1,5 @@
 node_modules
+main.js
+opt_utils.js
+*.dot
+*.ll

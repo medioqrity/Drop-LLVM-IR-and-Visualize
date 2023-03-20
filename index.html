@@ -136,8 +136,6 @@
 <body>
   <script>
     function dragOverHandler(ev) {
-      console.log("File(s) in drop zone");
-
       // Prevent default behavior (Prevent file from being opened)
       ev.preventDefault();
     }
@@ -367,8 +365,11 @@
               const file = item.getAsFile();
               // console.log(`file[${i}].name = ${file.name}`);
               readFile(file).then(content => {
-                src = content;
-                renderGraph();
+                fetch("/gen_dot", { method: "POST", body: content })
+                  .then(res => res.json())
+                  .then(data => console.log(data));
+                // src = content;
+                // renderGraph();
               }).catch(error => {
                 console.error(error);
               })
@@ -488,45 +489,6 @@
 
         return -1;
       };
-
-      /* come from sharing */
-      // const params = new URLSearchParams(location.search.substring(1));
-      // if (params.has('engine')) {
-      //   const engine = params.get('engine');
-      //   const index = engineEl.options.indexOf(engine);
-      //   if (index > -1) { // if index exists
-      //     engineEl.selectedIndex = index;
-      //   } else {
-      //     show_error({ message: `invalid engine ${engine} selected` });
-      //   }
-      // }
-
-      // if (params.has('raw')) {
-      //   // editor.getSession().setValue(params.get('raw'));
-      //   renderGraph();
-      // } else if (params.has('compressed')) {
-      //   const compressed = params.get('compressed');
-      // } else if (params.has('url')) {
-      //   const url = params.get('url');
-      //   let ok = false;
-      //   fetch(url)
-      //     .then(res => {
-      //       ok = res.ok;
-      //       return res.text();
-      //     })
-      //     .then(res => {
-      //       if (!ok) {
-      //         throw { message: res };
-      //       }
-
-      //       editor.getSession().setValue(res);
-      //       renderGraph();
-      //     }).catch(e => {
-      //       show_error(e);
-      //     });
-      // } else if (editor.getValue()) { // Init
-      //   renderGraph();
-      // }
     })(document);
   </script>
   <script src="viz.js" type="text/javascript" charset="utf-8"></script>
