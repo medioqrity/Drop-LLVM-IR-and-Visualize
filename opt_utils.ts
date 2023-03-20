@@ -21,7 +21,5 @@ function gen_dot(llvm_ir_filename: string) {
 
 export function process_llvm_ir(data: string) {
     writeToFile("temp_ir.ll", data);
-    let ret = gen_dot("temp_ir.ll");
-    console.log(ret);
-    return ret;
+    return gen_dot("temp_ir.ll");
 }

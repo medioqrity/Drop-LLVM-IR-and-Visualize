@@ -57,10 +57,6 @@
       opacity: 0.5;
     }
 
-    #shareurl {
-      display: none;
-    }
-
     #status {
       width: 100%;
       position: fixed;
@@ -142,19 +138,21 @@
   </script>
 
   <div id="drop_zone" ondragover="dragOverHandler(event)">
-    <p>Drag one or more files to this <i>drop zone</i>.</p>
+    <p>Drag one file to this <i>drop zone</i>.</p>
   </div>
 
+
   <div id="options">
+    <label id="functions">
+      Functions:
+      <select>
+      </select>
+    </label>
+
     <label id="engine">
       Engine:
       <select>
-        <option>circo</option>
         <option selected="">dot</option>
-        <option>fdp</option>
-        <option>neato</option>
-        <option>osage</option>
-        <option>twopi</option>
       </select>
     </label>
 
@@ -170,19 +168,9 @@
       </select>
     </label>
 
-    <label id="raw" class="disabled">
-      <input type="checkbox" disabled=""> Show raw output
-    </label>
-
     <label>
       <a href="#" target="_blank" id="download">Download</a>
     </label>
-
-    <label>
-      <input type="button" value="Share" id="share">
-    </label>
-
-    <input type="input" value="" id="shareurl">
 
   </div>
   <div id="review">
@@ -204,7 +192,6 @@
         });
       }
 
-
       var el_stetus = document.getElementById("status"),
         t_stetus = -1,
         reviewer = document.getElementById("review"),
@@ -214,13 +201,12 @@
         worker = null,
         parser = new DOMParser(),
         showError = null,
+        functionsEl = document.querySelector("#functions select");
         formatEl = document.querySelector("#format select"),
         engineEl = document.querySelector("#engine select"),
-        rawEl = document.querySelector("#raw input"),
-        shareEl = document.querySelector("#share"),
-        shareURLEl = document.querySelector("#shareurl"),
         errorEl = document.querySelector("#error"),
         src = "",
+        dot_files = [],
         drop_zone = document.querySelector("#drop_zone");
 
       function show_status(text, hide) {
@@ -272,28 +258,6 @@
           }
         }
         svgImage.src = svgXml;
-      }
-
-      function copyShareURL(e) {
-        var content = encodeURIComponent(src);
-
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://api-ssl.bitly.com/v4/shorten", true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        /* love and peace; don't let me down :) */
-        xhr.setRequestHeader('Authorization', 'Bearer 5959ae0ffc42f5e6b8cee4ebf1b7ee0218bfc291');
-        xhr.send(JSON.stringify({ "long_url": "https://dreampuf.github.io/GraphvizOnline/#" + content }));
-        xhr.onreadystatechange = function () {
-          if (this.readyState != 4) return;
-
-          shareURLEl.style.display = "inline";
-          if (this.status >= 200 && this.status < 300 && this.responseText.indexOf('"link":') >= 0) {
-            var result = JSON.parse(this.responseText);
-            shareURLEl.value = result.link;
-          } else {
-            shareURLEl.value = "https://dreampuf.github.io/GraphvizOnline/#" + content
-          }
-        };
       }
 
       function copyToClipboard(str) {
@@ -354,8 +318,25 @@
         worker.postMessage(params);
       }
 
+      function rerenderBySelectedIndex() {
+        src = dot_files[functionsEl.selectedIndex][1];
+        renderGraph();
+      }
+
+      functionsEl.addEventListener("change", () => {
+        rerenderBySelectedIndex();
+      });
+
+      function updateFunctionSelect() {
+        while (functionsEl.firstChild) {
+          functionsEl.removeChild(functionsEl.lastChild);
+        }
+        for (let [filename, content] of dot_files) {
+          functionsEl.add(new Option(filename));
+        }
+      }
+
       function dropHandler(ev) {
-        console.log("files dropped");
         ev.preventDefault();
         if (ev.dataTransfer.items) {
           // Use DataTransferItemList interface to access the file(s)
@@ -367,9 +348,11 @@
               readFile(file).then(content => {
                 fetch("/gen_dot", { method: "POST", body: content })
                   .then(res => res.json())
-                  .then(data => console.log(data));
-                // src = content;
-                // renderGraph();
+                  .then(data => {
+                    dot_files = data;
+                    updateFunctionSelect();
+                    rerenderBySelectedIndex();
+                  });
               }).catch(error => {
                 console.error(error);
               })
@@ -388,14 +371,6 @@
       }
 
       function updateOutput(result) {
-        if (formatEl.value === "svg") {
-          document.querySelector("#raw").classList.remove("disabled");
-          rawEl.disabled = false;
-        } else {
-          document.querySelector("#raw").classList.add("disabled");
-          rawEl.disabled = true;
-        }
-
         var text = reviewer.querySelector("#text");
         if (text) {
           reviewer.removeChild(text);
@@ -413,7 +388,7 @@
         reviewer.classList.remove("working");
         reviewer.classList.remove("error");
 
-        if (formatEl.value == "svg" && !rawEl.checked) {
+        if (formatEl.value == "svg") {
           var svg = parser.parseFromString(result, "image/svg+xml");
           //get svg source.
           var serializer = new XMLSerializer();
@@ -476,8 +451,6 @@
 
       formatEl.addEventListener("change", renderGraph);
       engineEl.addEventListener("change", renderGraph);
-      rawEl.addEventListener("change", renderGraph);
-      share.addEventListener("click", copyShareURL);
 
       // Since apparently HTMLCollection does not implement the oh so convenient array functions
       HTMLOptionsCollection.prototype.indexOf = function (name) {
