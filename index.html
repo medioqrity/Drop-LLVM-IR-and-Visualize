@@ -143,34 +143,45 @@
 
 
   <div id="options">
-    <label id="functions">
-      Functions:
+    <label id="passes">
+      Available passes:
       <select>
+        <option value="-dot-callgraph">callgraph</option>
+        <option selected value="-dot-cfg">CFG</option>
+        <option value="-dot-cfg-only">CFG only</option>
+        <option value="-dot-dom">DOM</option>
+        <option value="-dot-dom-only">DOM only</option>
+        <option value="-dot-postdom">Post-DOM</option>
+        <option value="-dot-postdom-only">Post-DOM only</option>
       </select>
-    </label>
+      <label id="functions">
+        Functions:
+        <select>
+        </select>
+      </label>
 
-    <label id="engine">
-      Engine:
-      <select>
-        <option selected="">dot</option>
-      </select>
-    </label>
+      <label id="engine">
+        Engine:
+        <select>
+          <option selected="">dot</option>
+        </select>
+      </label>
 
-    <label id="format">
-      Format:
-      <select>
-        <option selected="">svg</option>
-        <option>png-image-element</option>
-        <option>json</option>
-        <option>xdot</option>
-        <option>plain</option>
-        <option>ps</option>
-      </select>
-    </label>
+      <label id="format">
+        Format:
+        <select>
+          <option selected="">svg</option>
+          <option>png-image-element</option>
+          <option>json</option>
+          <option>xdot</option>
+          <option>plain</option>
+          <option>ps</option>
+        </select>
+      </label>
 
-    <label>
-      <a href="#" target="_blank" id="download">Download</a>
-    </label>
+      <label>
+        <a href="#" target="_blank" id="download">Download</a>
+      </label>
 
   </div>
   <div id="review">
@@ -201,11 +212,13 @@
         worker = null,
         parser = new DOMParser(),
         showError = null,
-        functionsEl = document.querySelector("#functions select");
+        passesEl = document.querySelector("#passes select"),
+        functionsEl = document.querySelector("#functions select"),
         formatEl = document.querySelector("#format select"),
         engineEl = document.querySelector("#engine select"),
         errorEl = document.querySelector("#error"),
-        src = "",
+        dotSource = "",
+        irSource = "",
         dot_files = [],
         drop_zone = document.querySelector("#drop_zone");
 
@@ -307,7 +320,7 @@
 
         show_status("rendering...");
         var params = {
-          "src": src,
+          "src": dotSource,
           "id": new Date().toJSON(),
           "options": {
             "files": [],
@@ -319,12 +332,16 @@
       }
 
       function rerenderBySelectedIndex() {
-        src = dot_files[functionsEl.selectedIndex][1];
+        dotSource = dot_files[functionsEl.selectedIndex][1];
         renderGraph();
       }
 
       functionsEl.addEventListener("change", () => {
         rerenderBySelectedIndex();
+      });
+
+      passesEl.addEventListener("change", () => {
+        genDotAndRerender();
       });
 
       function updateFunctionSelect() {
@@ -336,6 +353,16 @@
         }
       }
 
+      function genDotAndRerender() {
+        fetch("/gen_dot", { method: "POST", body: JSON.stringify({ pass: passesEl[passesEl.selectedIndex].value, content: irSource }) })
+          .then(res => res.json())
+          .then(data => {
+            dot_files = data;
+            updateFunctionSelect();
+            rerenderBySelectedIndex();
+          })
+      }
+
       function dropHandler(ev) {
         ev.preventDefault();
         if (ev.dataTransfer.items) {
@@ -343,16 +370,12 @@
           [...ev.dataTransfer.items].forEach((item, i) => {
             // If dropped items aren't files, reject them
             if (item.kind === "file") {
+              // const file = item.getAsFile();
               const file = item.getAsFile();
               // console.log(`file[${i}].name = ${file.name}`);
               readFile(file).then(content => {
-                fetch("/gen_dot", { method: "POST", body: content })
-                  .then(res => res.json())
-                  .then(data => {
-                    dot_files = data;
-                    updateFunctionSelect();
-                    rerenderBySelectedIndex();
-                  });
+                irSource = content;
+                genDotAndRerender();
               }).catch(error => {
                 console.error(error);
               })
@@ -366,7 +389,7 @@
       }
 
       function updateState() {
-        var content = encodeURIComponent(src);
+        var content = encodeURIComponent(dotSource);
         history.pushState({ "content": content }, "", "#" + content)
       }
 
@@ -440,12 +463,12 @@
           reviewer.appendChild(text);
         }
 
-        updateState()
+        // updateState()
       }
 
       window.onpopstate = function (event) {
         if (event.state != null && event.state.content != undefined) {
-          src = decodeURIComponent(event.state.content);
+          dotSource = decodeURIComponent(event.state.content);
         }
       };
 

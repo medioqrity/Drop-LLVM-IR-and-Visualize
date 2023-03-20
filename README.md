@@ -10,7 +10,7 @@ You will need:
 - `nodejs` (14 or higher)
 - Typescript compiler
 
-You might check if you meet the requirements by running following commands:
+You might check if your environment meet the requirements by running following commands:
 
 ```bash
 $ opt --version

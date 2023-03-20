@@ -29,7 +29,8 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
             body += chunk.toString();
         });
         req.on("end", () => {
-            let dot_files = process_llvm_ir(body);
+            let req_json = JSON.parse(body);
+            let dot_files = process_llvm_ir(req_json["content"], req_json["pass"]);
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify(dot_files));
