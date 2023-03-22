@@ -10,7 +10,7 @@ You will need:
 
 - `opt` from llvm
 - `nodejs` (14 or higher)
-- Typescript compiler
+ Dependencies listed in `package.json`. You may install them by running `$ npm install` at project root folder.
 
 You might check if your environment meet the requirements by running following commands:
 
@@ -26,7 +26,7 @@ $ tsc --version
 Version 4.9.3
 ```
 
-## How to compile
+## How to compile `.ts`
 
 Source codes are written in `.ts` files and need to be compiled into `.js` files to execute. You will have to execute the following command:
 

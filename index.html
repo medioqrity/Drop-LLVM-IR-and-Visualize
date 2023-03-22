@@ -154,8 +154,8 @@
         <option value="-dot-postdom">Post-DOM</option>
         <option value="-dot-postdom-only">Post-DOM only</option>
       </select>
-      <label id="functions">
-        Functions:
+      <label id="dot_files">
+        Dot Files:
         <select>
         </select>
       </label>
@@ -213,7 +213,7 @@
         parser = new DOMParser(),
         showError = null,
         passesEl = document.querySelector("#passes select"),
-        functionsEl = document.querySelector("#functions select"),
+        dotFilesEl = document.querySelector("#dot_files select"),
         formatEl = document.querySelector("#format select"),
         engineEl = document.querySelector("#engine select"),
         errorEl = document.querySelector("#error"),
@@ -332,11 +332,11 @@
       }
 
       function rerenderBySelectedIndex() {
-        dotSource = dot_files[functionsEl.selectedIndex][1];
+        dotSource = dot_files[dotFilesEl.selectedIndex][1];
         renderGraph();
       }
 
-      functionsEl.addEventListener("change", () => {
+      dotFilesEl.addEventListener("change", () => {
         rerenderBySelectedIndex();
       });
 
@@ -345,11 +345,11 @@
       });
 
       function updateFunctionSelect() {
-        while (functionsEl.firstChild) {
-          functionsEl.removeChild(functionsEl.lastChild);
+        while (dotFilesEl.firstChild) {
+          dotFilesEl.removeChild(dotFilesEl.lastChild);
         }
         for (let [filename, content] of dot_files) {
-          functionsEl.add(new Option(filename));
+          dotFilesEl.add(new Option(filename));
         }
       }
 
